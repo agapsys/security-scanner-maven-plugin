@@ -22,40 +22,32 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.ModifierSet;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 class SecurityVisitor extends VoidVisitorAdapter {
 	// CLASS SCOPE =============================================================
-	private static final String ENTITY_ANNOTATION_CLASS            = "javax.persistence.Entity";
-	private static final String CONVERTER_ANNOTATION_CLASS        = "javax.persistence.Converter";
-	private static final String ATTRIBUTE_CONVERTER_INTERFACE_CLASS = "javax.persistence.AttributeConverter";
-	
-	private static final String ENTITY_ANNOTATION     = "Entity";
-	private static final String CONVERTER_ANNOTATION = "Converter";
-	
-	private static final String ATTRIBUTE_CONVERTER_INTERFACE = "AttributeConverter";
+	private static final String SECURED_ANNOTATION       = "Secured";
+	private static final String SECURED_ANNOTATION_CLASS = "com.agapsys.security." + SECURED_ANNOTATION;
 	// =========================================================================
 
 	// INSTANCE SCOPE ==========================================================
-	public boolean entityAnnotationImport;
-	public boolean converterAnnotationImport;
-	public boolean attributeConverterInterfaceImport;
+	public boolean securedAnnotationImport;
+	public boolean isSecuredClass;
+	public String currentClassName;
 	private String cuPackage;
 
 	public final Set<String> securedClasses = new LinkedHashSet<String>();
 
 	private void prepare() {
+		securedAnnotationImport = false;
+		isSecuredClass = false;
+		currentClassName = "";
 		cuPackage = "";
-		entityAnnotationImport = false;
-		converterAnnotationImport =  false;
-		attributeConverterInterfaceImport = false;
 		securedClasses.clear();
 	}
 	
@@ -74,25 +66,55 @@ class SecurityVisitor extends VoidVisitorAdapter {
 	public void visit(ImportDeclaration n, Object arg) {
 		String importStr = n.getName().toString();
 		
-		if (importStr.equals(ENTITY_ANNOTATION_CLASS)) {
-			entityAnnotationImport = true;
-		} else if (importStr.equals(CONVERTER_ANNOTATION_CLASS)) {
-			converterAnnotationImport = true;
-		} else if (importStr.equals(ATTRIBUTE_CONVERTER_INTERFACE_CLASS)) {
-			attributeConverterInterfaceImport = true;
+		if (importStr.equals(SECURED_ANNOTATION_CLASS)) {
+			securedAnnotationImport = true;
 		}
 	}
 	
-	private boolean passModifiers(String packageName, String className, TypeDeclaration n) {
-		String classNameWithoutPackage = packageName.isEmpty() ? className : className.replaceFirst(Pattern.quote(packageName + "."), "");
-		boolean innerClass = classNameWithoutPackage.split(Pattern.quote(".")).length > 1;
+	@Override
+	public void visit(ClassOrInterfaceDeclaration n, Object arg) {
+		isSecuredClass = false;
 		
-		if (!innerClass)
-			return ModifierSet.hasModifier(n.getModifiers(), ModifierSet.PUBLIC);
+		// Recursive workaround to fix inner classes detection:
+		for (BodyDeclaration bd : n.getMembers()) {
+			if (bd instanceof ClassOrInterfaceDeclaration) {
+				visit((ClassOrInterfaceDeclaration) bd, null);
+			}
+		}
 		
-		return 
-			ModifierSet.hasModifier(n.getModifiers(), ModifierSet.PUBLIC)
-			&& ModifierSet.hasModifier(n.getModifiers(), ModifierSet.STATIC);
+		currentClassName = cuPackage.isEmpty() ? getClassName(n) : cuPackage + "." + getClassName(n);
+		
+		if (n.getAnnotations() != null) {
+			for (AnnotationExpr annotation : n.getAnnotations()) {
+				String annotationName = annotation.getName().getName();
+				
+				boolean isSecuredAnnotation = (annotationName.equals(SECURED_ANNOTATION) && securedAnnotationImport) || annotationName.equals(SECURED_ANNOTATION_CLASS);
+				
+				if (isSecuredAnnotation) {
+					isSecuredClass = true;
+					securedClasses.add(currentClassName);
+				}
+			}
+		}
+		super.visit(n, arg);
+	}
+	
+	@Override
+	public void visit(MethodDeclaration n, Object arg) {
+		if (!isSecuredClass) {
+			if (n.getAnnotations() != null) {
+				for (AnnotationExpr annotation : n.getAnnotations()) {
+					String annotationName = annotation.getName().getName();
+
+					boolean isSecuredAnnotation = (annotationName.equals(SECURED_ANNOTATION) && securedAnnotationImport) || annotationName.equals(SECURED_ANNOTATION_CLASS);
+
+					if (isSecuredAnnotation) {
+						isSecuredClass = true;
+						securedClasses.add(currentClassName);
+					}
+				}
+			}
+		}
 	}
 	
 	private String getClassName(TypeDeclaration n) {
@@ -102,57 +124,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 		if (parentNode instanceof CompilationUnit)
 			return className;
 				
-		return getClassName((TypeDeclaration) parentNode) + "." + className;
-	}
-	
-	
-	@Override
-	public void visit(ClassOrInterfaceDeclaration n, Object arg) {
-		// Recursive workaround to fix inner classes detection:
-		for (BodyDeclaration bd : n.getMembers()) {
-			if (bd instanceof ClassOrInterfaceDeclaration) {
-				visit((ClassOrInterfaceDeclaration) bd, null);
-			}
-		}
-		
-		String currentClassName = cuPackage.isEmpty() ? getClassName(n) : cuPackage + "." + getClassName(n);
-		
-		if (n.getAnnotations() != null) {
-			for (AnnotationExpr annotation : n.getAnnotations()) {
-				String annotationName = annotation.getName().getName();
-				
-				boolean isEntityAnnotation = (annotationName.equals(ENTITY_ANNOTATION) && entityAnnotationImport) || annotationName.equals(ENTITY_ANNOTATION_CLASS);
-				boolean isConverterAnnotation = (annotationName.equals(CONVERTER_ANNOTATION) && converterAnnotationImport) || annotationName.equals(CONVERTER_ANNOTATION_CLASS);
-				
-				String modifiersErrMsg = String.format("Invalid modifiers for class '%s'", currentClassName);
-				
-				if (isEntityAnnotation) {
-					if (!passModifiers(cuPackage, currentClassName, n))
-						throw new RuntimeException(modifiersErrMsg);
-					
-					securedClasses.add(currentClassName);
-					
-				} else if (isConverterAnnotation) {
-					String errMsg = String.format("Converter class '%s' does not implement '%s'", currentClassName, ATTRIBUTE_CONVERTER_INTERFACE_CLASS);
-					
-					if (!attributeConverterInterfaceImport)
-						throw new ParsingException(errMsg);
-					
-					for (ClassOrInterfaceType cOrI : n.getImplements()) {
-						boolean isAttributeConverterInterface = (cOrI.getName().equals(ATTRIBUTE_CONVERTER_INTERFACE) && attributeConverterInterfaceImport) || cOrI.getName().equals(ATTRIBUTE_CONVERTER_INTERFACE_CLASS);
-						
-						if (isAttributeConverterInterface) {
-							if (!passModifiers(cuPackage, currentClassName, n))
-								throw new ParsingException(modifiersErrMsg);
-							securedClasses.add(currentClassName);
-							break;
-						}
-						
-						throw new ParsingException(errMsg);
-					}
-				}
-			}
-		}
+		return getClassName((TypeDeclaration) parentNode) + "$" + className;
 	}
 	
 	public Set<String> getSecuredClasses() {

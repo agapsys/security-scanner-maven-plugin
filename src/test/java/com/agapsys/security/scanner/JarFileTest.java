@@ -27,10 +27,10 @@ public class JarFileTest {
 		SecurityInfo expectedJarInfo = new SecurityInfo(
 			"com.example.SecuredClass1",
 			"com.example.SecuredClass2",
-			"com.example.SecuredClass2.InnerSecuredClass1",
-			"com.example.SecuredClass2.InnerSecuredClass2",
-			"com.example.UnsecuredClass.InnerSecuredClass1",
-			"com.example.UnsecuredClass.InnerSecuredClass2"
+			"com.example.SecuredClass2$InnerSecuredClass1",
+			"com.example.SecuredClass2$InnerSecuredClass2",
+			"com.example.UnsecuredClass$InnerSecuredClass1",
+			"com.example.UnsecuredClass$InnerSecuredClass2"
 		);
 		
 		SecurityInfo securityInfo = JarFile.getSecurityInfo(Defs.LIB_JAR);

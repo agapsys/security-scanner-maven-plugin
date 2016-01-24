@@ -26,14 +26,12 @@ public class SourceDirectoryTest {
 		SecurityInfo srcDirInfo = SourceDirectory.getSecurityInfo(Defs.LIB_SRC_DIR);
 		
 		SecurityInfo expectedInfo = new SecurityInfo(
-			"com.example.Converter1",
-			"com.example.Converter2",
-			"com.example.Converter2.InnerConverter",
-			"com.example.Converter3",
-			"com.example.Entity1",
-			"com.example.Entity2",
-			"com.example.Entity3",
-			"com.example.SimpleEnum.InnerConverter"
+			"com.example.SecuredClass1",
+			"com.example.SecuredClass2",
+			"com.example.SecuredClass2$InnerSecuredClass1",
+			"com.example.SecuredClass2$InnerSecuredClass2",
+			"com.example.UnsecuredClass$InnerSecuredClass1",
+			"com.example.UnsecuredClass$InnerSecuredClass2"
 		);
 		
 		Assert.assertEquals(expectedInfo, srcDirInfo);

@@ -35,10 +35,10 @@ public class SecurityVisitorTest {
 		String fileSeparator = System.getProperty("file.separator");
 		
 		Set<String> expectedClasses = new LinkedHashSet<String>();
-		expectedClasses.add("com.example.SecuredClass1");
-		expectedClasses.add("com.example.SecuredClass1.InnerSecuredClass");
+		expectedClasses.add("com.example.UnsecuredClass$InnerSecuredClass1");
+		expectedClasses.add("com.example.UnsecuredClass$InnerSecuredClass2");
 		
-		File srcFile = new File(Defs.LIB_SRC_DIR, String.format("com%sexample%sConverter2.java", fileSeparator, fileSeparator));
+		File srcFile = new File(Defs.LIB_SRC_DIR, String.format("com%sexample%sUnsecuredClass.java", fileSeparator, fileSeparator));
 
 		FileInputStream fis = new FileInputStream(srcFile);
 
