@@ -60,6 +60,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 	@Override
 	public void visit(PackageDeclaration n, Object arg) {
 		cuPackage = n.getName().toString();
+		super.visit(n, arg);
 	}
 	
 	@Override
@@ -69,6 +70,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 		if (importStr.equals(SECURED_ANNOTATION_CLASS)) {
 			securedAnnotationImport = true;
 		}
+		super.visit(n, arg);
 	}
 	
 	@Override
@@ -115,6 +117,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 				}
 			}
 		}
+		super.visit(n, arg);
 	}
 	
 	private String getClassName(TypeDeclaration n) {
