@@ -17,9 +17,7 @@
 package com.agapsys.security.scanner;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -51,21 +49,11 @@ public class CreatetMojo extends AbstractMojo {
 			File outputDirectory = FileUtils.getOrCreateDirectory(outputDirectoryPath);
 			File outputFile = new File(outputDirectory, OUTPUT_FILENAME);
 			
-			OutputStream os = null;
 			String ioErrMsg = "Error generating file: " + outputFile.getAbsolutePath();
 			try {
-				os = new FileOutputStream(outputFile);
-				srcDirInfo.write(os);
+				srcDirInfo.write(outputFile);
 			} catch (IOException ex) {
 				throw new MojoFailureException(ioErrMsg);
-			} finally {
-				if (os != null) {
-					try {
-						os.close();
-					} catch (IOException ex) {
-						throw new MojoFailureException(ioErrMsg);
-					}
-				}
 			}
 		} catch (ParsingException ex) {
 			throw new MojoFailureException(ex.getMessage());

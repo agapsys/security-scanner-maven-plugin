@@ -20,11 +20,11 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.PackageDeclaration;
-import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -38,7 +38,6 @@ class SecurityVisitor extends VoidVisitorAdapter {
 	// INSTANCE SCOPE ==========================================================
 	public boolean securedAnnotationImport;
 	public boolean isSecuredClass;
-	public String currentClassName;
 	private String cuPackage;
 
 	public final Set<String> securedClasses = new LinkedHashSet<String>();
@@ -46,7 +45,6 @@ class SecurityVisitor extends VoidVisitorAdapter {
 	private void prepare() {
 		securedAnnotationImport = false;
 		isSecuredClass = false;
-		currentClassName = "";
 		cuPackage = "";
 		securedClasses.clear();
 	}
@@ -72,19 +70,19 @@ class SecurityVisitor extends VoidVisitorAdapter {
 		}
 		super.visit(n, arg);
 	}
+
+	@Override
+	public void visit(BlockStmt n, Object arg) {
+		super.visit(n, arg); //To change body of generated methods, choose Tools | Templates.
+	}
+	
+	
 	
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n, Object arg) {
+		
 		isSecuredClass = false;
-		
-		// Recursive workaround to fix inner classes detection:
-		for (BodyDeclaration bd : n.getMembers()) {
-			if (bd instanceof ClassOrInterfaceDeclaration) {
-				visit((ClassOrInterfaceDeclaration) bd, null);
-			}
-		}
-		
-		currentClassName = cuPackage.isEmpty() ? getClassName(n) : cuPackage + "." + getClassName(n);
+		String className = cuPackage.isEmpty() ? getClassName(n) : cuPackage + "." + getClassName(n);
 		
 		if (n.getAnnotations() != null) {
 			for (AnnotationExpr annotation : n.getAnnotations()) {
@@ -94,7 +92,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 				
 				if (isSecuredAnnotation) {
 					isSecuredClass = true;
-					securedClasses.add(currentClassName);
+					securedClasses.add(className);
 				}
 			}
 		}
@@ -103,7 +101,10 @@ class SecurityVisitor extends VoidVisitorAdapter {
 	
 	@Override
 	public void visit(MethodDeclaration n, Object arg) {
-		if (!isSecuredClass) {
+		TypeDeclaration td = (TypeDeclaration) n.getParentNode();
+		String parentClassName = cuPackage.isEmpty() ? getClassName(td) : cuPackage + "." + getClassName(td);
+
+		if (!isSecuredClass && !securedClasses.contains(parentClassName)) {
 			if (n.getAnnotations() != null) {
 				for (AnnotationExpr annotation : n.getAnnotations()) {
 					String annotationName = annotation.getName().getName();
@@ -112,7 +113,7 @@ class SecurityVisitor extends VoidVisitorAdapter {
 
 					if (isSecuredAnnotation) {
 						isSecuredClass = true;
-						securedClasses.add(currentClassName);
+						securedClasses.add(parentClassName);
 					}
 				}
 			}
