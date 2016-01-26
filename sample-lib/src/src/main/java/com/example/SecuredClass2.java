@@ -25,7 +25,7 @@ public class SecuredClass2  {
 	
 	public static class InnerSecuredClass2 {
 		@Secured
-		public void method() {}
+		public void InnerSecuredClass2Method() {}
 	}
 	
 	
@@ -36,6 +36,6 @@ public class SecuredClass2  {
 	
 	// INSTANCE SCOPE ==========================================================
 	@Secured
-	public void method() {}
+	public void securedClass2Method() {}
 	// =========================================================================
 }
