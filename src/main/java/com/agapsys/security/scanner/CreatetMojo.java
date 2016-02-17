@@ -37,21 +37,27 @@ public class CreatetMojo extends AbstractMojo {
 	@Parameter(property = "project", readonly = true)
 	private MavenProject mavenProject;
 	
+	@Parameter(defaultValue = "false")
+	private boolean processDependencies;
+	
+	@Parameter(defaultValue = "false")
+	private boolean test;
+	
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		try {
-			File sourceDir = new File(mavenProject.getBuild().getSourceDirectory());
-			SecurityInfo srcDirInfo = SourceDirectory.getSecurityInfo(sourceDir);
 			
+			SecurityInfo securityInfo = ListMojo.getSecurityInfo(mavenProject, processDependencies, test);
+
 			String fileSeparator = FileUtils.FOLDER_DELIMITER;
-			String outputDirectoryPath = String.format("%s%sMETA-INF", mavenProject.getBuild().getOutputDirectory(), fileSeparator);
+			String outputDirectoryPath = String.format("%s%sMETA-INF", test ? mavenProject.getBuild().getTestOutputDirectory() :  mavenProject.getBuild().getOutputDirectory(), fileSeparator);
 			
 			File outputDirectory = FileUtils.getOrCreateDirectory(outputDirectoryPath);
 			File outputFile = new File(outputDirectory, OUTPUT_FILENAME);
 			
 			String ioErrMsg = "Error generating file: " + outputFile.getAbsolutePath();
 			try {
-				srcDirInfo.write(outputFile);
+				securityInfo.write(outputFile);
 			} catch (IOException ex) {
 				throw new MojoFailureException(ioErrMsg);
 			}

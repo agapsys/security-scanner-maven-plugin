@@ -17,6 +17,7 @@
 package com.agapsys.security.scanner;
 
 import java.io.File;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -32,36 +33,58 @@ import org.apache.maven.project.MavenProject;
 
 @Mojo(name = "list", defaultPhase = LifecyclePhase.GENERATE_RESOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class ListMojo extends AbstractMojo {
+	// STATIC SCOPE ============================================================
+	static SecurityInfo getSecurityInfo(MavenProject mavenProject, boolean includeDependencies, boolean includeTest) {
+		List<SecurityInfo> securityInfoList = new LinkedList<SecurityInfo>();
+		
+		// Scan sources...
+		List<String> srcDirList = new LinkedList<String>();
+		srcDirList.add(mavenProject.getBuild().getSourceDirectory());
+		
+		if (includeTest) 
+			srcDirList.add(mavenProject.getBuild().getTestSourceDirectory());
 
-	@Parameter(property = "project", readonly = true)
-	private MavenProject mavenProject;
+		for (String srcDir : srcDirList) {
+			securityInfoList.add(SourceDirectory.getSecurityInfo(new File(srcDir)));
+		}
 
-	@Parameter(defaultValue = "secured-classes")
-	private String filterProperty;
+		// Scan dependencies...
+		if (includeDependencies) {
+			Set<Artifact> dependencies = new LinkedHashSet<Artifact>();
+			dependencies.addAll(mavenProject.getArtifacts());
+			
+			if (includeTest) 
+				dependencies.addAll(mavenProject.getTestArtifacts());
 
-	@Override
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		try {
-			// Source directory...
-			SecurityInfo srcDirInfo = SourceDirectory.getSecurityInfo(new File(mavenProject.getBuild().getSourceDirectory()));
-
-			// JAR files with security information...
-			List<SecurityInfo> securityInfoList = new LinkedList<SecurityInfo>();
-
-			Set<Artifact> dependencies = mavenProject.getArtifacts();
 			for (Artifact artifact : dependencies) {
 				SecurityInfo tmpInfo = JarFile.getSecurityInfo(artifact.getFile());
 				if (tmpInfo != null)
 					securityInfoList.add(tmpInfo);
 			}
-			
-			// Global information...
-			SecurityInfo[] infoArray = new SecurityInfo[securityInfoList.size() + 1];
-			infoArray[0] = srcDirInfo;
-			for (int i = 1; i < infoArray.length; i++) {
-				infoArray[i] = securityInfoList.get(i - 1);
-			}
-			SecurityInfo globalSecurityInfo = new SecurityInfo(infoArray);
+		}
+		
+		// Global Security information...
+		return new SecurityInfo(securityInfoList.toArray(new SecurityInfo[securityInfoList.size()]));
+	}
+	// =========================================================================
+	
+	// INSTANCE SCOPE ==========================================================
+	@Parameter(property = "project", readonly = true)
+	private MavenProject mavenProject;
+
+	@Parameter(defaultValue = "secured-classes")
+	private String filterProperty;
+	
+	@Parameter(defaultValue = "true")
+	private boolean processDependencies;
+	
+	@Parameter(defaultValue = "false")
+	private boolean test;
+
+	@Override
+	public void execute() throws MojoExecutionException, MojoFailureException {
+		try {
+			SecurityInfo globalSecurityInfo = getSecurityInfo(mavenProject, processDependencies, test);
 			
 			// output class list...
 			StringBuilder sb = new StringBuilder();
