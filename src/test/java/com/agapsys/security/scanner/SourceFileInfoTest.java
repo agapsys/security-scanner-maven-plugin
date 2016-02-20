@@ -16,42 +16,26 @@
 
 package com.agapsys.security.scanner;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseException;
-import com.github.javaparser.ast.CompilationUnit;
+import com.agapsys.mvn.scanner.parser.ParsingException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SecurityVisitorTest {
+public class SourceFileInfoTest {
 	
 	@Test
-	public void test() throws FileNotFoundException, ParseException, IOException {
+	public void test() throws ParsingException {
 		String fileSeparator = System.getProperty("file.separator");
 		
-		Set<String> expectedClasses = new LinkedHashSet<String>();
-		expectedClasses.add("com.example.UnsecuredClass$InnerSecuredClass1");
-		expectedClasses.add("com.example.UnsecuredClass$InnerSecuredClass2");
+		Set<String> expectedClasses = TestUtils.getStringSet(
+			"com.example.UnsecuredClass$InnerSecuredClass1",
+			"com.example.UnsecuredClass$InnerSecuredClass2"
+		);
 		
 		File srcFile = new File(Defs.LIB_SRC_DIR, String.format("com%sexample%sUnsecuredClass.java", fileSeparator, fileSeparator));
-
-		FileInputStream fis = new FileInputStream(srcFile);
-
-		CompilationUnit cu;
-		try {
-			cu = JavaParser.parse(fis);
-		} finally {
-			fis.close();
-		}
-
-		SecurityVisitor cv = new SecurityVisitor();
-		cv.visit(cu, null);
+		Set<String> scannedClasses = TestUtils.scanJpaClasses(srcFile);
 		
-		Assert.assertEquals(expectedClasses, cv.getSecuredClasses());
+		Assert.assertEquals(expectedClasses, scannedClasses);
 	}
 }

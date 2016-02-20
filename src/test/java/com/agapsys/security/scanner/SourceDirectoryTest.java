@@ -16,16 +16,17 @@
 
 package com.agapsys.security.scanner;
 
+import com.agapsys.mvn.scanner.parser.ParsingException;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SourceDirectoryTest {
 	
 	@Test
-	public void test() {
-		SecurityInfo srcDirInfo = SourceDirectory.getSecurityInfo(Defs.LIB_SRC_DIR);
-		
-		SecurityInfo expectedInfo = new SecurityInfo(
+	public void test() throws ParsingException {
+		Set<String> scannedClasses = TestUtils.scanJpaClasses(Defs.LIB_SRC_DIR);
+		Set<String> expectedClasses = TestUtils.getStringSet(
 			"com.example.SecuredClass1",
 			"com.example.SecuredClass2",
 			"com.example.SecuredClass2$InnerSecuredClass1",
@@ -34,6 +35,6 @@ public class SourceDirectoryTest {
 			"com.example.UnsecuredClass$InnerSecuredClass2"
 		);
 		
-		Assert.assertEquals(expectedInfo, srcDirInfo);
+		Assert.assertEquals(expectedClasses, scannedClasses);
 	}
 }

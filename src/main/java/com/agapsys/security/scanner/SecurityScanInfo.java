@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.agapsys.security.scanner;
 
-public class ParsingException extends RuntimeException {
-	
-	ParsingException(String message) {
-		super(message);
-	}
+import com.agapsys.mvn.scanner.ScanInfo;
+import com.agapsys.mvn.scanner.parser.ClassInfo;
 
-	ParsingException(Throwable cause) {
-		super(cause);
+/**
+ * Security implementation of ScanInfo
+ * @author Leandro Oliveira (leandro@agapsys.com)
+ */
+public class SecurityScanInfo extends ScanInfo {
+
+	@Override
+	protected String getEntryString(ClassInfo classInfo) {
+		return classInfo.reflectionClassName + "\n";
 	}
+	
 }

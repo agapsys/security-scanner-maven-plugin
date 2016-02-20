@@ -16,15 +16,18 @@
 
 package com.agapsys.security.scanner;
 
+import com.agapsys.mvn.scanner.parser.ParsingException;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class JarFileTest {
 	
 	@Test
-	public void test() {
+	public void test() throws ParsingException {
 		
-		SecurityInfo expectedJarInfo = new SecurityInfo(
+		Set<String> scannedClasses = TestUtils.getEmbeddedInfo(Defs.LIB_JAR);
+		Set<String> expectedClasses = TestUtils.getStringSet(
 			"com.example.SecuredClass1",
 			"com.example.SecuredClass2",
 			"com.example.SecuredClass2$InnerSecuredClass1",
@@ -33,8 +36,6 @@ public class JarFileTest {
 			"com.example.UnsecuredClass$InnerSecuredClass2"
 		);
 		
-		SecurityInfo securityInfo = JarFile.getSecurityInfo(Defs.LIB_JAR);
-		
-		Assert.assertEquals(expectedJarInfo, securityInfo);
+		Assert.assertEquals(expectedClasses, scannedClasses);
 	}
 }
