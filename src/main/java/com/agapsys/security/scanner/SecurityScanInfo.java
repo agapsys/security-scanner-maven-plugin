@@ -26,7 +26,7 @@ public class SecurityScanInfo extends ScanInfo {
 
 	@Override
 	protected String getEntryString(ClassInfo classInfo) {
-		return classInfo.reflectionClassName + "\n";
+		return classInfo.reflectionClassName;
 	}
 	
 }
