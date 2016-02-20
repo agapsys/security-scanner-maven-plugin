@@ -19,6 +19,7 @@ import com.agapsys.mvn.scanner.SourceDirectoryScanner;
 import com.agapsys.mvn.scanner.parser.AnnotationInfo;
 import com.agapsys.mvn.scanner.parser.ClassInfo;
 import com.agapsys.mvn.scanner.parser.MethodInfo;
+import com.agapsys.mvn.scanner.parser.ParsingException;
 import java.util.Collection;
 
 /**
@@ -49,7 +50,7 @@ public class SecuritySourceDirectoryScanner extends SourceDirectoryScanner {
 	private static final String SECURED_ANNOTATION_CLASS = "com.agapsys.security.Secured";
 	
 	@Override
-	protected boolean isValid(ClassInfo classInfo) {
+	protected boolean shallBeIncluded(ClassInfo classInfo) throws ParsingException {
 		boolean hasSecuredAnnotation = containsAnnotationClass(classInfo.annotations, SECURED_ANNOTATION_CLASS);
 		
 		if (hasSecuredAnnotation)
