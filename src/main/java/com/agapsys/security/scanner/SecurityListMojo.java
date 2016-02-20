@@ -48,7 +48,7 @@ public class SecurityListMojo extends AbstractListMojo {
 
 	@Override
 	protected String getExposedEntry(String scanInfoEntry) {
-		return scanInfoEntry;
+		return scanInfoEntry + "\n";
 	}
 
 	@Override
