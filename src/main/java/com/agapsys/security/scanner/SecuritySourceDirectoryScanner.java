@@ -20,6 +20,7 @@ import com.agapsys.mvn.scanner.parser.AnnotationInfo;
 import com.agapsys.mvn.scanner.parser.ClassInfo;
 import com.agapsys.mvn.scanner.parser.MethodInfo;
 import com.agapsys.mvn.scanner.parser.ParsingException;
+import static com.agapsys.security.scanner.SecurityScannerDefs.log;
 import java.util.Collection;
 
 /**
@@ -66,6 +67,11 @@ public class SecuritySourceDirectoryScanner extends SourceDirectoryScanner {
 		}
 		
 		return hasMethodAnnotedWithSecuredAnnotation;
+	}
+	
+	@Override
+	protected void beforeInclude(ClassInfo classInfo) {
+		log("Secured class: %s", classInfo.className);
 	}
 	// =========================================================================
 }

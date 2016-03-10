@@ -17,6 +17,8 @@ package com.agapsys.security.scanner;
 
 import com.agapsys.mvn.scanner.AbstractCreateMojo;
 import com.agapsys.mvn.scanner.ScannerDefs;
+import static com.agapsys.security.scanner.SecurityScannerDefs.log;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -58,4 +60,11 @@ public class SecurityCreateMojo extends AbstractCreateMojo {
 	protected ScannerDefs getScannerDefs() {
 		return SecurityScannerDefs.getInstance();
 	}
+	
+	@Override
+	public void execute() throws MojoExecutionException {
+		log("Creating '%s'...", getScannerDefs().getEmbeddedScanInfoFilePath());
+		super.execute();
+		log("Done!");
+	}	
 }

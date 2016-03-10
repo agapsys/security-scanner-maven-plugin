@@ -17,6 +17,8 @@ package com.agapsys.security.scanner;
 
 import com.agapsys.mvn.scanner.AbstractListMojo;
 import com.agapsys.mvn.scanner.ScannerDefs;
+import static com.agapsys.security.scanner.SecurityScannerDefs.log;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -70,5 +72,12 @@ public class SecurityListMojo extends AbstractListMojo {
 	@Override
 	protected boolean includeTests() {
 		return includeTests;
+	}
+	
+	@Override
+	public void execute() throws MojoExecutionException {
+		log("Listing secured classes...");
+		super.execute();
+		log("Done!");
 	}
 }

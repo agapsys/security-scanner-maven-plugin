@@ -33,6 +33,13 @@ public class SecurityScannerDefs extends ScannerDefs {
 	
 	public static final String OPTION_INCLUDE_DEPENDENCIES = "includeDependencies";
 	public static final String OPTION_INCLUDE_TESTS        = "includeTests";
+	
+	public static void log(String message, Object...msgArgs) {
+		if (msgArgs.length > 0)
+			message = String.format(message, msgArgs);
+		
+		System.out.println(message);
+	}
 	// =========================================================================
 	
 	// INSTANCE SCOPE ==========================================================
