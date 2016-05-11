@@ -21,7 +21,7 @@ limitations under the License.
      
 	<groupId>com.agapsys.plugins</groupId>
 	<artifactId>security-scanner-maven-plugin</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>maven-plugin</packaging>
      
 	<name>Security Scanner Maven Plugin</name>
@@ -65,7 +65,7 @@ limitations under the License.
 		<dependency>
 			<groupId>com.agapsys.libs</groupId>
 			<artifactId>scanner-maven-plugin-lib</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<version>0.1.0</version>
 		</dependency>
 		
 		<!-- Provided dependencies -->
