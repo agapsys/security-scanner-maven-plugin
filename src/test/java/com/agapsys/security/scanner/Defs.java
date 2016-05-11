@@ -24,7 +24,7 @@ public class Defs {
 	public static final File LIB_SRC_DIR;
 	
 	static {
-		LIB_JAR = new File("sample-lib/sample-lib-0.1.0.jar");
+		LIB_JAR = new File("sample-lib/sample-lib.jar");
 		LIB_SRC_DIR = new File("sample-lib/src/src/main/java");
 	}
 	// =========================================================================
